@@ -43,6 +43,7 @@ type AccountID interface {
 
 	// Conversion
 	ToColumns() AccountIDColumns
+	ToColumnsCompact() AccountIDColumnsCompact
 }
 
 // Parser is the interface for namespace-specific parsers.
@@ -147,4 +148,75 @@ func (c AccountIDColumns) String() string {
 func (c AccountIDColumns) Validate() error {
 	_, err := c.ToAccountID()
 	return err
+}
+
+// ToCompact converts to the compact two-field format.
+func (c AccountIDColumns) ToCompact() AccountIDColumnsCompact {
+	if c.IsZero() {
+		return AccountIDColumnsCompact{}
+	}
+	return AccountIDColumnsCompact{
+		ChainID: c.Namespace + ":" + c.Reference,
+		Address: c.Address,
+	}
+}
+
+// AccountIDColumnsCompact is a compact two-field format for storing AccountID.
+// ChainID is the CAIP-2 chain identifier (namespace:reference).
+type AccountIDColumnsCompact struct {
+	ChainID string `json:"chain_id" db:"chain_id" gorm:"column:chain_id;type:varchar(41);not null"` // namespace:reference (max 8+1+32=41)
+	Address string `json:"address" db:"address" gorm:"column:address;type:varchar(128);not null"`
+}
+
+// ToAccountID converts AccountIDColumnsCompact back to AccountID with validation.
+func (c AccountIDColumnsCompact) ToAccountID() (AccountID, error) {
+	if c.IsZero() {
+		return nil, ErrEmptyValue
+	}
+	return Parse(c.ChainID + ":" + c.Address)
+}
+
+// MustToAccountID converts AccountIDColumnsCompact to AccountID and panics if invalid.
+func (c AccountIDColumnsCompact) MustToAccountID() AccountID {
+	a, err := c.ToAccountID()
+	if err != nil {
+		panic(err)
+	}
+	return a
+}
+
+// IsZero reports whether all fields are empty.
+func (c AccountIDColumnsCompact) IsZero() bool {
+	return c.ChainID == "" && c.Address == ""
+}
+
+// String returns the CAIP-10 string representation.
+func (c AccountIDColumnsCompact) String() string {
+	if c.IsZero() {
+		return ""
+	}
+	return c.ChainID + ":" + c.Address
+}
+
+// Validate checks if the columns are valid per CAIP-10 spec.
+func (c AccountIDColumnsCompact) Validate() error {
+	_, err := c.ToAccountID()
+	return err
+}
+
+// ToFull converts to the full three-field format.
+func (c AccountIDColumnsCompact) ToFull() (AccountIDColumns, error) {
+	if c.IsZero() {
+		return AccountIDColumns{}, nil
+	}
+	// Split ChainID into namespace and reference
+	ns, ref, err := SplitCAIP2(c.ChainID)
+	if err != nil {
+		return AccountIDColumns{}, err
+	}
+	return AccountIDColumns{
+		Namespace: ns,
+		Reference: ref,
+		Address:   c.Address,
+	}, nil
 }

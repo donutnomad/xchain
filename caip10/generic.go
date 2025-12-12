@@ -138,6 +138,17 @@ func (a *GenericAccountID) ToColumns() AccountIDColumns {
 	}
 }
 
+// ToColumnsCompact converts to AccountIDColumnsCompact for database storage.
+func (a *GenericAccountID) ToColumnsCompact() AccountIDColumnsCompact {
+	if a == nil {
+		return AccountIDColumnsCompact{}
+	}
+	return AccountIDColumnsCompact{
+		ChainID: a.namespace + ":" + a.reference,
+		Address: a.address,
+	}
+}
+
 // ToNative converts GenericAccountID to its namespace-specific type.
 // Returns EIP155AccountID for eip155, SolanaAccountID for solana, or *GenericAccountID for others.
 func (a *GenericAccountID) ToNative() any {

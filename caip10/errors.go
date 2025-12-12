@@ -32,6 +32,34 @@ var (
 	ErrEmptyValue       = errors.New("caip10: empty value")
 )
 
+// SplitCAIP2 splits a CAIP-2 chain ID string into namespace and reference.
+// Format: namespace:reference
+func SplitCAIP2(s string) (namespace, reference string, err error) {
+	if len(s) == 0 {
+		return "", "", ErrEmptyValue
+	}
+
+	// Find colon separator
+	i := 0
+	for i < len(s) && s[i] != ':' {
+		i++
+	}
+	if i >= len(s) {
+		return "", "", fmt.Errorf("%w: missing namespace separator", ErrInvalidFormat)
+	}
+	namespace = s[:i]
+	reference = s[i+1:]
+
+	// Ensure reference doesn't contain another colon (that would be CAIP-10)
+	for j := range reference {
+		if reference[j] == ':' {
+			return "", "", fmt.Errorf("%w: unexpected colon in reference", ErrInvalidFormat)
+		}
+	}
+
+	return namespace, reference, nil
+}
+
 // SplitCAIP10 splits a CAIP-10 string into namespace, reference, and address.
 func SplitCAIP10(s string) (namespace, reference, address string, err error) {
 	if len(s) == 0 {

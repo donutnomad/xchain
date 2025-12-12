@@ -229,6 +229,200 @@ func TestAccountIDColumns(t *testing.T) {
 	}
 }
 
+func TestAccountIDColumnsCompact(t *testing.T) {
+	a := MustNewGeneric("cosmos", "cosmoshub-3", "cosmos1abc")
+
+	// Test ToColumnsCompact
+	compact := a.ToColumnsCompact()
+	if compact.ChainID != "cosmos:cosmoshub-3" {
+		t.Errorf("ChainID: got %q, want %q", compact.ChainID, "cosmos:cosmoshub-3")
+	}
+	if compact.Address != "cosmos1abc" {
+		t.Errorf("Address: got %q, want %q", compact.Address, "cosmos1abc")
+	}
+
+	// Test String
+	if compact.String() != "cosmos:cosmoshub-3:cosmos1abc" {
+		t.Errorf("String: got %q", compact.String())
+	}
+
+	// Test ToAccountID
+	b, err := compact.ToAccountID()
+	if err != nil {
+		t.Fatalf("ToAccountID failed: %v", err)
+	}
+	if !a.Equal(b) {
+		t.Errorf("roundtrip failed: got %v, want %v", b, a)
+	}
+
+	// Test ToFull
+	full, err := compact.ToFull()
+	if err != nil {
+		t.Fatalf("ToFull failed: %v", err)
+	}
+	if full.Namespace != "cosmos" {
+		t.Errorf("ToFull Namespace: got %q", full.Namespace)
+	}
+	if full.Reference != "cosmoshub-3" {
+		t.Errorf("ToFull Reference: got %q", full.Reference)
+	}
+	if full.Address != "cosmos1abc" {
+		t.Errorf("ToFull Address: got %q", full.Address)
+	}
+
+	// Test ToCompact from AccountIDColumns
+	cols := a.ToColumns()
+	compact2 := cols.ToCompact()
+	if compact2.ChainID != compact.ChainID {
+		t.Errorf("ToCompact ChainID mismatch: got %q, want %q", compact2.ChainID, compact.ChainID)
+	}
+	if compact2.Address != compact.Address {
+		t.Errorf("ToCompact Address mismatch: got %q, want %q", compact2.Address, compact.Address)
+	}
+}
+
+func TestAccountIDColumnsCompactZero(t *testing.T) {
+	var compact AccountIDColumnsCompact
+	if !compact.IsZero() {
+		t.Error("zero value should be IsZero")
+	}
+	if compact.String() != "" {
+		t.Errorf("zero String should be empty, got %q", compact.String())
+	}
+
+	// ToAccountID should fail for zero value
+	_, err := compact.ToAccountID()
+	if err == nil {
+		t.Error("ToAccountID should fail for zero value")
+	}
+
+	// ToFull should return zero columns
+	full, err := compact.ToFull()
+	if err != nil {
+		t.Fatalf("ToFull failed: %v", err)
+	}
+	if !full.IsZero() {
+		t.Error("ToFull of zero should be zero")
+	}
+}
+
+func TestAccountIDColumnsCompactSpecializedTypes(t *testing.T) {
+	// 测试 EIP155 类型还原
+	t.Run("EIP155", func(t *testing.T) {
+		eip := NewEIP155FromHex(1, "0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb")
+		compact := eip.ToColumnsCompact()
+
+		recovered, err := compact.ToAccountID()
+		if err != nil {
+			t.Fatalf("ToAccountID failed: %v", err)
+		}
+
+		eipRecovered, ok := recovered.(EIP155AccountID)
+		if !ok {
+			t.Fatalf("expected EIP155AccountID, got %T", recovered)
+		}
+		if eipRecovered.ChainID().Cmp(eip.ChainID()) != 0 {
+			t.Errorf("ChainID mismatch: got %s, want %s", eipRecovered.ChainID(), eip.ChainID())
+		}
+	})
+
+	// 测试 Solana 类型还原
+	t.Run("Solana", func(t *testing.T) {
+		sol := MustNewSolanaFromBase58(SolanaMainnet, "7S3P4HxJpyyigGzodYwHtCxZyUQe9JiBMHyRWXArAaKv")
+		compact := sol.ToColumnsCompact()
+
+		recovered, err := compact.ToAccountID()
+		if err != nil {
+			t.Fatalf("ToAccountID failed: %v", err)
+		}
+
+		solRecovered, ok := recovered.(SolanaAccountID)
+		if !ok {
+			t.Fatalf("expected SolanaAccountID, got %T", recovered)
+		}
+		if solRecovered.Account().String() != sol.Account().String() {
+			t.Errorf("Account mismatch")
+		}
+	})
+
+	// 测试 BIP122 类型还原
+	t.Run("BIP122", func(t *testing.T) {
+		btc := NewBitcoinMainnet("bc1qwz2lhc40s8ty3l5jg3plpve3y3l82x9l42q7fk")
+		compact := btc.ToColumnsCompact()
+
+		recovered, err := compact.ToAccountID()
+		if err != nil {
+			t.Fatalf("ToAccountID failed: %v", err)
+		}
+
+		btcRecovered, ok := recovered.(BIP122AccountID)
+		if !ok {
+			t.Fatalf("expected BIP122AccountID, got %T", recovered)
+		}
+		if btcRecovered.Network() != BitcoinMainnet {
+			t.Errorf("Network mismatch: got %s, want %s", btcRecovered.Network(), BitcoinMainnet)
+		}
+	})
+}
+
+func TestSplitCAIP2(t *testing.T) {
+	tests := []struct {
+		input     string
+		namespace string
+		reference string
+		wantErr   bool
+	}{
+		{
+			input:     "eip155:1",
+			namespace: "eip155",
+			reference: "1",
+			wantErr:   false,
+		},
+		{
+			input:     "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+			namespace: "solana",
+			reference: "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+			wantErr:   false,
+		},
+		{
+			input:     "bip122:000000000019d6689c085ae165831e93",
+			namespace: "bip122",
+			reference: "000000000019d6689c085ae165831e93",
+			wantErr:   false,
+		},
+		{
+			input:   "",
+			wantErr: true,
+		},
+		{
+			input:   "eip155",
+			wantErr: true,
+		},
+		{
+			input:   "eip155:1:0xabc", // This is CAIP-10, not CAIP-2
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.input, func(t *testing.T) {
+			ns, ref, err := SplitCAIP2(tc.input)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("SplitCAIP2(%q) error = %v, wantErr %v", tc.input, err, tc.wantErr)
+				return
+			}
+			if err == nil {
+				if ns != tc.namespace {
+					t.Errorf("namespace: got %q, want %q", ns, tc.namespace)
+				}
+				if ref != tc.reference {
+					t.Errorf("reference: got %q, want %q", ref, tc.reference)
+				}
+			}
+		})
+	}
+}
+
 func TestMustParsePanic(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
