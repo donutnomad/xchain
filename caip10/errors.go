@@ -61,7 +61,7 @@ func SplitCAIP2(s string) (namespace, reference string, err error) {
 }
 
 // SplitCAIP10 splits a CAIP-10 string into namespace, reference, and address.
-func SplitCAIP10(s string) (namespace, reference, address string, err error) {
+func SplitCAIP10(s string) (namespace Namespace, reference, address string, err error) {
 	if len(s) == 0 {
 		return "", "", "", ErrEmptyValue
 	}
@@ -74,7 +74,7 @@ func SplitCAIP10(s string) (namespace, reference, address string, err error) {
 	if i >= len(s) {
 		return "", "", "", fmt.Errorf("%w: missing namespace separator", ErrInvalidFormat)
 	}
-	namespace = s[:i]
+	namespace = Namespace(s[:i])
 
 	// Find second colon for reference
 	j := i + 1

@@ -182,7 +182,7 @@ func TestSolanaToColumns(t *testing.T) {
 	a := MustNewSolanaFromBase58(SolanaMainnet, "7S3P4HxJpyyigGzodYwHtCxZyUQe9JiBMHyRWXArAaKv")
 
 	cols := a.ToColumns()
-	if cols.Namespace != NamespaceSolana {
+	if Namespace(cols.Namespace) != NamespaceSolana {
 		t.Errorf("Namespace: got %q", cols.Namespace)
 	}
 	if cols.Reference != SolanaMainnet.String() {

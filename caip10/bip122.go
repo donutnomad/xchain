@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-const NamespaceBIP122 = "bip122"
+const NamespaceBIP122 Namespace = "bip122"
 
 // BIP122Network represents a BIP122 network (chain reference).
 // The reference is the first 32 characters of the genesis block hash.
@@ -246,7 +246,7 @@ func (a *bip122AccountID) Equal(other AccountID) bool {
 
 type bip122Parser struct{}
 
-func (p *bip122Parser) Namespace() string {
+func (p *bip122Parser) Namespace() Namespace {
 	return NamespaceBIP122
 }
 

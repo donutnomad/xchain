@@ -15,13 +15,13 @@ var _ AccountID = (*GenericAccountID)(nil)
 // It can be embedded by namespace-specific implementations to inherit serialization methods.
 type GenericAccountID struct {
 	// https://github.com/ChainAgnostic/namespaces
-	namespace string
+	namespace Namespace
 	reference string
 	address   string
 }
 
 // NewGeneric creates a new GenericAccountID with validation.
-func NewGeneric(namespace, reference, address string) (*GenericAccountID, error) {
+func NewGeneric(namespace Namespace, reference, address string) (*GenericAccountID, error) {
 	a := &GenericAccountID{
 		namespace: namespace,
 		reference: reference,
@@ -34,7 +34,7 @@ func NewGeneric(namespace, reference, address string) (*GenericAccountID, error)
 }
 
 // MustNewGeneric creates a new GenericAccountID and panics if invalid.
-func MustNewGeneric(namespace, reference, address string) *GenericAccountID {
+func MustNewGeneric(namespace Namespace, reference, address string) *GenericAccountID {
 	a, err := NewGeneric(namespace, reference, address)
 	if err != nil {
 		panic(err)
@@ -43,7 +43,7 @@ func MustNewGeneric(namespace, reference, address string) *GenericAccountID {
 }
 
 // newGenericUnchecked creates without validation (for internal use by embedders).
-func newGenericUnchecked(namespace, reference, address string) *GenericAccountID {
+func newGenericUnchecked(namespace Namespace, reference, address string) *GenericAccountID {
 	return &GenericAccountID{
 		namespace: namespace,
 		reference: reference,
@@ -52,7 +52,7 @@ func newGenericUnchecked(namespace, reference, address string) *GenericAccountID
 }
 
 // Namespace returns the blockchain namespace.
-func (a *GenericAccountID) Namespace() string {
+func (a *GenericAccountID) Namespace() Namespace {
 	if a == nil {
 		return ""
 	}
@@ -75,12 +75,15 @@ func (a *GenericAccountID) Address() string {
 	return a.address
 }
 
-// CAIP2 returns the CAIP-2 chain ID (namespace:reference).
-func (a *GenericAccountID) CAIP2() string {
+// ChainID returns the CAIP-2 chain ID (namespace:reference).
+func (a *GenericAccountID) ChainID() ChainID {
 	if a == nil {
-		return ""
+		return ChainID{}
 	}
-	return a.namespace + ":" + a.reference
+	return ChainID{
+		Namespace: a.Namespace(),
+		Reference: a.Reference(),
+	}
 }
 
 // String returns the full CAIP-10 string representation.
@@ -88,7 +91,7 @@ func (a *GenericAccountID) String() string {
 	if a.IsZero() {
 		return ""
 	}
-	return a.namespace + ":" + a.reference + ":" + a.address
+	return string(a.namespace) + ":" + a.reference + ":" + a.address
 }
 
 // IsZero reports whether the AccountID is the zero value.
@@ -114,7 +117,7 @@ func (a *GenericAccountID) Validate() error {
 	if a == nil {
 		return ErrEmptyValue
 	}
-	if !NamespaceRegex.MatchString(a.namespace) {
+	if !NamespaceRegex.MatchString(string(a.namespace)) {
 		return fmt.Errorf("%w: must match [-a-z0-9]{3,8}, got %q", ErrInvalidNamespace, a.namespace)
 	}
 	if !ReferenceRegex.MatchString(a.reference) {
@@ -132,7 +135,7 @@ func (a *GenericAccountID) ToColumns() AccountIDColumns {
 		return AccountIDColumns{}
 	}
 	return AccountIDColumns{
-		Namespace: a.namespace,
+		Namespace: string(a.namespace),
 		Reference: a.reference,
 		Address:   a.address,
 	}
@@ -144,7 +147,7 @@ func (a *GenericAccountID) ToColumnsCompact() AccountIDColumnsCompact {
 		return AccountIDColumnsCompact{}
 	}
 	return AccountIDColumnsCompact{
-		ChainID: a.namespace + ":" + a.reference,
+		ChainID: a.ChainID().String(),
 		Address: a.address,
 	}
 }
@@ -229,7 +232,7 @@ func (a *GenericAccountID) UnmarshalBinary(data []byte) error {
 	offset += refLen
 	address := string(data[offset : offset+addrLen])
 
-	parsed, err := NewGeneric(namespace, reference, address)
+	parsed, err := NewGeneric(Namespace(namespace), reference, address)
 	if err != nil {
 		return err
 	}
@@ -321,15 +324,15 @@ func (a *GenericAccountID) UnmarshalCBOR(data []byte) error {
 
 // GenericParser is the default parser for unknown namespaces.
 type GenericParser struct {
-	ns string
+	ns Namespace
 }
 
 // NewGenericParser creates a parser for a specific namespace.
-func NewGenericParser(namespace string) *GenericParser {
+func NewGenericParser(namespace Namespace) *GenericParser {
 	return &GenericParser{ns: namespace}
 }
 
-func (p *GenericParser) Namespace() string {
+func (p *GenericParser) Namespace() Namespace {
 	return p.ns
 }
 

@@ -8,7 +8,7 @@ import (
 	"github.com/donutnomad/solana-web3/web3"
 )
 
-const NamespaceSolana = "solana"
+const NamespaceSolana Namespace = "solana"
 
 // SolanaNetwork represents a Solana network (chain reference).
 // https://github.com/ChainAgnostic/namespaces/blob/main/solana/caip10.md
@@ -252,7 +252,7 @@ func (a *solanaAccountID) Equal(other AccountID) bool {
 
 type solanaParser struct{}
 
-func (p *solanaParser) Namespace() string {
+func (p *solanaParser) Namespace() Namespace {
 	return NamespaceSolana
 }
 

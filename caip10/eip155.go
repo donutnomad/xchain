@@ -7,7 +7,7 @@ import (
 	"github.com/donutnomad/eths/ecommon"
 )
 
-const NamespaceEIP155 = "eip155"
+const NamespaceEIP155 Namespace = "eip155"
 
 // maxEIP155ChainID is the maximum chain ID allowed (32 decimal digits: 10^32 - 1).
 // This ensures the reference string fits within CAIP-10's 32-character limit.
@@ -23,8 +23,8 @@ type EIP155AccountID interface {
 	AccountID
 	// Account returns the native ecommon.Address.
 	Account() ecommon.Address
-	// ChainID returns the chain ID as *big.Int.
-	ChainID() *big.Int
+	// EIP155ChainID returns the chain ID as *big.Int.
+	EIP155ChainID() *big.Int
 	// SetChainID returns a new EIP155AccountID with the specified chain ID.
 	SetChainID(chainID *big.Int) EIP155AccountID
 	// SetAddress returns a new EIP155AccountID with the specified address.
@@ -83,8 +83,8 @@ func (a *eip155AccountID) Account() ecommon.Address {
 	return a.ethAddr
 }
 
-// ChainID returns the chain ID as *big.Int.
-func (a *eip155AccountID) ChainID() *big.Int {
+// EIP155ChainID returns the chain ID as *big.Int.
+func (a *eip155AccountID) EIP155ChainID() *big.Int {
 	if a == nil || a.chainID == nil {
 		return nil
 	}
@@ -128,7 +128,7 @@ func (a *eip155AccountID) Equal(other AccountID) bool {
 
 type eip155Parser struct{}
 
-func (p *eip155Parser) Namespace() string {
+func (p *eip155Parser) Namespace() Namespace {
 	return NamespaceEIP155
 }
 

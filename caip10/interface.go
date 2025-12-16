@@ -12,20 +12,24 @@ import (
 // Format: namespace:reference:address
 type AccountID interface {
 	// Core accessors
-	Namespace() string
+
+	Namespace() Namespace
 	Reference() string
 	Address() string
-	CAIP2() string // CAIP-2 chain ID (namespace:reference)
+	ChainID() ChainID // CAIP-2 chain ID (namespace:reference)
 
 	// State
+
 	IsZero() bool
 	Equal(other AccountID) bool
 	Validate() error
 
 	// fmt.Stringer
+
 	String() string
 
 	// Serialization interfaces
+
 	encoding.TextMarshaler
 	encoding.TextUnmarshaler
 	encoding.BinaryMarshaler
@@ -34,27 +38,30 @@ type AccountID interface {
 	json.Unmarshaler
 
 	// Database interfaces
+
 	driver.Valuer
 	Scan(src any) error
 
 	// CBOR serialization
+
 	MarshalCBOR() ([]byte, error)
 	UnmarshalCBOR(data []byte) error
 
 	// Conversion
+
 	ToColumns() AccountIDColumns
 	ToColumnsCompact() AccountIDColumnsCompact
 }
 
 // Parser is the interface for namespace-specific parsers.
 type Parser interface {
-	Namespace() string
+	Namespace() Namespace
 	Parse(s string) (AccountID, error)
 	ParseAddress(reference, address string) (AccountID, error)
 }
 
 // registry holds namespace-specific parsers
-var registry = make(map[string]Parser)
+var registry = make(map[Namespace]Parser)
 
 // RegisterParser registers a parser for a namespace.
 func RegisterParser(p Parser) {
@@ -62,7 +69,7 @@ func RegisterParser(p Parser) {
 }
 
 // GetParser returns the parser for a namespace.
-func GetParser(namespace string) (Parser, bool) {
+func GetParser(namespace Namespace) (Parser, bool) {
 	p, ok := registry[namespace]
 	return p, ok
 }
@@ -79,7 +86,7 @@ func Parse(s string) (AccountID, error) {
 		return p.ParseAddress(ref, addr)
 	}
 
-	return NewGeneric(ns, ref, addr)
+	return NewGeneric(Namespace(ns), ref, addr)
 }
 
 // MustParse parses a CAIP-10 string and panics if invalid.
@@ -92,7 +99,7 @@ func MustParse(s string) AccountID {
 }
 
 // ParseWithNamespace parses using a specific namespace parser.
-func ParseWithNamespace(namespace, reference, address string) (AccountID, error) {
+func ParseWithNamespace(namespace Namespace, reference, address string) (AccountID, error) {
 	if p, ok := registry[namespace]; ok {
 		return p.ParseAddress(reference, address)
 	}
@@ -119,7 +126,7 @@ type AccountIDColumns struct {
 
 // ToAccountID converts AccountIDColumns back to AccountID with validation.
 func (c AccountIDColumns) ToAccountID() (AccountID, error) {
-	return ParseWithNamespace(c.Namespace, c.Reference, c.Address)
+	return ParseWithNamespace(Namespace(c.Namespace), c.Reference, c.Address)
 }
 
 // MustToAccountID converts AccountIDColumns to AccountID and panics if invalid.

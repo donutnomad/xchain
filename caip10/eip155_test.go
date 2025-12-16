@@ -172,7 +172,7 @@ func TestEIP155ToColumns(t *testing.T) {
 	a := NewEIP155FromHex(1, "0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb")
 
 	cols := a.ToColumns()
-	if cols.Namespace != NamespaceEIP155 {
+	if Namespace(cols.Namespace) != NamespaceEIP155 {
 		t.Errorf("Namespace: got %q", cols.Namespace)
 	}
 	if cols.Reference != "1" {

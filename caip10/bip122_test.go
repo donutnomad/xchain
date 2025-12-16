@@ -222,7 +222,7 @@ func TestBIP122ToColumns(t *testing.T) {
 	a := NewBitcoinMainnet("35PBEaofpUeH8VnnNSorM1QZsadrZoQp4N")
 
 	cols := a.ToColumns()
-	if cols.Namespace != NamespaceBIP122 {
+	if Namespace(cols.Namespace) != NamespaceBIP122 {
 		t.Errorf("Namespace: got %q", cols.Namespace)
 	}
 	if cols.Reference != BitcoinMainnet.String() {

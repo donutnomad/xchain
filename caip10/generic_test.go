@@ -51,7 +51,7 @@ func TestGenericParse(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Parse(%q) failed: %v", tc.input, err)
 			}
-			if a.Namespace() != tc.namespace {
+			if a.Namespace() != Namespace(tc.namespace) {
 				t.Errorf("Namespace: got %q, want %q", a.Namespace(), tc.namespace)
 			}
 			if a.Reference() != tc.reference {
