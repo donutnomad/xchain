@@ -13,99 +13,99 @@ type Namespace string
 
 // Ethereum
 var (
-	ChainIDEthereumMainnet = NewChainIDByEIP155(1)
-	ChainIDEthereumSepolia = NewChainIDByEIP155(11155111)
-	ChainIDEthereumHoodi   = NewChainIDByEIP155(560048)
+	ChainIDEthereumMainnet = NewEIP155ChainID(1)
+	ChainIDEthereumSepolia = NewEIP155ChainID(11155111)
+	ChainIDEthereumHoodi   = NewEIP155ChainID(560048)
 )
 
 // Arbitrum
 var (
-	ChainIDArbitrumOne     = NewChainIDByEIP155(42161)
-	ChainIDArbitrumNova    = NewChainIDByEIP155(42170)
-	ChainIDArbitrumSepolia = NewChainIDByEIP155(421614)
+	ChainIDArbitrumOne     = NewEIP155ChainID(42161)
+	ChainIDArbitrumNova    = NewEIP155ChainID(42170)
+	ChainIDArbitrumSepolia = NewEIP155ChainID(421614)
 )
 
 // Optimism
 var (
-	ChainIDOptimism        = NewChainIDByEIP155(10)
-	ChainIDOptimismSepolia = NewChainIDByEIP155(11155420)
+	ChainIDOptimism        = NewEIP155ChainID(10)
+	ChainIDOptimismSepolia = NewEIP155ChainID(11155420)
 )
 
 // Base
 var (
-	ChainIDBase        = NewChainIDByEIP155(8453)
-	ChainIDBaseSepolia = NewChainIDByEIP155(84532)
+	ChainIDBase        = NewEIP155ChainID(8453)
+	ChainIDBaseSepolia = NewEIP155ChainID(84532)
 )
 
 // Polygon
 var (
-	ChainIDPolygon      = NewChainIDByEIP155(137)
-	ChainIDPolygonAmoy  = NewChainIDByEIP155(80002)
-	ChainIDPolygonZkEVM = NewChainIDByEIP155(1101)
+	ChainIDPolygon      = NewEIP155ChainID(137)
+	ChainIDPolygonAmoy  = NewEIP155ChainID(80002)
+	ChainIDPolygonZkEVM = NewEIP155ChainID(1101)
 )
 
 // zkSync Era
 var (
-	ChainIDZkSyncEra        = NewChainIDByEIP155(324)
-	ChainIDZkSyncEraSepolia = NewChainIDByEIP155(300)
+	ChainIDZkSyncEra        = NewEIP155ChainID(324)
+	ChainIDZkSyncEraSepolia = NewEIP155ChainID(300)
 )
 
 // Linea
 var (
-	ChainIDLinea        = NewChainIDByEIP155(59144)
-	ChainIDLineaSepolia = NewChainIDByEIP155(59141)
+	ChainIDLinea        = NewEIP155ChainID(59144)
+	ChainIDLineaSepolia = NewEIP155ChainID(59141)
 )
 
 // Scroll
 var (
-	ChainIDScroll        = NewChainIDByEIP155(534352)
-	ChainIDScrollSepolia = NewChainIDByEIP155(534351)
+	ChainIDScroll        = NewEIP155ChainID(534352)
+	ChainIDScrollSepolia = NewEIP155ChainID(534351)
 )
 
 // BNB Smart Chain
 var (
-	ChainIDBSC        = NewChainIDByEIP155(56)
-	ChainIDBSCTestnet = NewChainIDByEIP155(97)
+	ChainIDBSC        = NewEIP155ChainID(56)
+	ChainIDBSCTestnet = NewEIP155ChainID(97)
 )
 
 // opBNB
 var (
-	ChainIDOpBNB        = NewChainIDByEIP155(204)
-	ChainIDOpBNBTestnet = NewChainIDByEIP155(5611)
+	ChainIDOpBNB        = NewEIP155ChainID(204)
+	ChainIDOpBNBTestnet = NewEIP155ChainID(5611)
 )
 
 // Avalanche
 var (
-	ChainIDAvalanche     = NewChainIDByEIP155(43114)
-	ChainIDAvalancheFuji = NewChainIDByEIP155(43113)
+	ChainIDAvalanche     = NewEIP155ChainID(43114)
+	ChainIDAvalancheFuji = NewEIP155ChainID(43113)
 )
 
 // Fantom
 var (
-	ChainIDFantom = NewChainIDByEIP155(250)
+	ChainIDFantom = NewEIP155ChainID(250)
 )
 
 // Gnosis
 var (
-	ChainIDGnosis = NewChainIDByEIP155(100)
+	ChainIDGnosis = NewEIP155ChainID(100)
 )
 
 // Celo
 var (
-	ChainIDCelo = NewChainIDByEIP155(42220)
+	ChainIDCelo = NewEIP155ChainID(42220)
 )
 
 // Solana
 var (
-	ChainIDSolanaMainnet = NewChainIDBySolana(SolanaMainnet)
-	ChainIDSolanaDevnet  = NewChainIDBySolana(SolanaDevnet)
-	ChainIDSolanaTestnet = NewChainIDBySolana(SolanaTestnet)
+	ChainIDSolanaMainnet = NewSolanaChainID(SolanaMainnet)
+	ChainIDSolanaDevnet  = NewSolanaChainID(SolanaDevnet)
+	ChainIDSolanaTestnet = NewSolanaChainID(SolanaTestnet)
 )
 
 // Bitcoin
 var (
-	ChainIDBitcoinMainnet = MustNewChainIDByBIP122(BitcoinMainnet)
-	ChainIDBitcoinTestnet = MustNewChainIDByBIP122(BitcoinTestnet)
+	ChainIDBitcoinMainnet = MustNewBIP122ChainID(BitcoinMainnet)
+	ChainIDBitcoinTestnet = MustNewBIP122ChainID(BitcoinTestnet)
 )
 
 // bip122ReferenceRegex validates BIP122 chain reference.
@@ -142,41 +142,41 @@ func validateReference(ns Namespace, reference string) error {
 	return nil
 }
 
-func NewChainIDByEIP155(chainID uint64) ChainID {
+func NewEIP155ChainID(chainID uint64) ChainID {
 	return ChainID{Namespace: NamespaceEIP155, Reference: strconv.FormatUint(chainID, 10)}
 }
 
-func NewChainIDBySolana(network SolanaNetwork) ChainID {
+func NewSolanaChainID(network SolanaNetwork) ChainID {
 	return ChainID{Namespace: NamespaceSolana, Reference: network.String()}
 }
 
-// NewChainIDByBIP122 creates a ChainID for BIP122 namespace.
+// NewBIP122ChainID creates a ChainID for BIP122 namespace.
 // blockHash should be the first 32 characters of the genesis block hash (hex encoded).
-func NewChainIDByBIP122(blockHash BIP122Network) (ChainID, error) {
+func NewBIP122ChainID(blockHash BIP122Network) (ChainID, error) {
 	if err := validateReference(NamespaceBIP122, string(blockHash)); err != nil {
 		return ChainID{}, err
 	}
 	return ChainID{Namespace: NamespaceBIP122, Reference: string(blockHash)}, nil
 }
 
-// MustNewChainIDByBIP122 creates a ChainID for BIP122 namespace and panics if invalid.
-func MustNewChainIDByBIP122(blockHash BIP122Network) ChainID {
-	c, err := NewChainIDByBIP122(blockHash)
+// MustNewBIP122ChainID creates a ChainID for BIP122 namespace and panics if invalid.
+func MustNewBIP122ChainID(blockHash BIP122Network) ChainID {
+	c, err := NewBIP122ChainID(blockHash)
 	if err != nil {
 		panic(err)
 	}
 	return c
 }
 
-func MustNewChainIDFromString(s string) ChainID {
-	c, err := NewChainIDFromString(s)
+func MustParseChainID(s string) ChainID {
+	c, err := ParseChainID(s)
 	if err != nil {
 		panic(err)
 	}
 	return c
 }
 
-func NewChainIDFromString(s string) (ChainID, error) {
+func ParseChainID(s string) (ChainID, error) {
 	parts := strings.Split(s, ":")
 	if len(parts) != 2 {
 		return ChainID{}, fmt.Errorf("%w: invalid format %q", ErrInvalidFormat, s)
@@ -239,7 +239,7 @@ func (c *ChainID) UnmarshalText(text []byte) error {
 		*c = ChainID{}
 		return nil
 	}
-	parsed, err := NewChainIDFromString(string(text))
+	parsed, err := ParseChainID(string(text))
 	if err != nil {
 		return err
 	}

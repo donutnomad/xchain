@@ -36,49 +36,49 @@ func TestNewChainIDByEIP155(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		c := NewChainIDByEIP155(tt.chainID)
+		c := NewEIP155ChainID(tt.chainID)
 		assert.Equal(t, NamespaceEIP155, c.Namespace)
 		assert.Equal(t, tt.want, c.String())
 	}
 }
 
 func TestNewChainIDBySolana(t *testing.T) {
-	c := NewChainIDBySolana(SolanaMainnet)
+	c := NewSolanaChainID(SolanaMainnet)
 	assert.Equal(t, NamespaceSolana, c.Namespace)
 	assert.Equal(t, "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", c.String())
 
-	c2 := NewChainIDBySolana(SolanaDevnet)
+	c2 := NewSolanaChainID(SolanaDevnet)
 	assert.Equal(t, "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", c2.String())
 }
 
 func TestNewChainIDByBIP122(t *testing.T) {
 	// Valid block hash (32 hex chars)
-	c, err := NewChainIDByBIP122("000000000019d6689c085ae165831e93")
+	c, err := NewBIP122ChainID("000000000019d6689c085ae165831e93")
 	require.NoError(t, err)
 	assert.Equal(t, NamespaceBIP122, c.Namespace)
 	assert.Equal(t, "bip122:000000000019d6689c085ae165831e93", c.String())
 
 	// Invalid: too short
-	_, err = NewChainIDByBIP122("000000000019d668")
+	_, err = NewBIP122ChainID("000000000019d668")
 	assert.Error(t, err)
 
 	// Invalid: uppercase
-	_, err = NewChainIDByBIP122("000000000019D6689C085AE165831E93")
+	_, err = NewBIP122ChainID("000000000019D6689C085AE165831E93")
 	assert.Error(t, err)
 
 	// Invalid: non-hex characters
-	_, err = NewChainIDByBIP122("000000000019d6689c085ae165831xyz")
+	_, err = NewBIP122ChainID("000000000019d6689c085ae165831xyz")
 	assert.Error(t, err)
 }
 
 func TestMustNewChainIDByBIP122(t *testing.T) {
 	// Valid
-	c := MustNewChainIDByBIP122("000000000019d6689c085ae165831e93")
+	c := MustNewBIP122ChainID("000000000019d6689c085ae165831e93")
 	assert.Equal(t, "bip122:000000000019d6689c085ae165831e93", c.String())
 
 	// Invalid should panic
 	assert.Panics(t, func() {
-		MustNewChainIDByBIP122("invalid")
+		MustNewBIP122ChainID("invalid")
 	})
 }
 
@@ -105,7 +105,7 @@ func TestNewChainIDFromString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, err := NewChainIDFromString(tt.input)
+			c, err := ParseChainID(tt.input)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -119,12 +119,12 @@ func TestNewChainIDFromString(t *testing.T) {
 
 func TestMustNewChainIDFromString(t *testing.T) {
 	// Valid
-	c := MustNewChainIDFromString("eip155:1")
+	c := MustParseChainID("eip155:1")
 	assert.Equal(t, "eip155:1", c.String())
 
 	// Invalid should panic
 	assert.Panics(t, func() {
-		MustNewChainIDFromString("invalid")
+		MustParseChainID("invalid")
 	})
 }
 
@@ -139,9 +139,9 @@ func TestChainID_IsZero(t *testing.T) {
 }
 
 func TestChainID_Equal(t *testing.T) {
-	c1 := NewChainIDByEIP155(1)
-	c2 := NewChainIDByEIP155(1)
-	c3 := NewChainIDByEIP155(137)
+	c1 := NewEIP155ChainID(1)
+	c2 := NewEIP155ChainID(1)
+	c3 := NewEIP155ChainID(137)
 
 	assert.True(t, c1.Equal(c2))
 	assert.False(t, c1.Equal(c3))
@@ -154,10 +154,10 @@ func TestChainID_Validate(t *testing.T) {
 		chainID ChainID
 		wantErr bool
 	}{
-		{"valid eip155", NewChainIDByEIP155(1), false},
-		{"valid solana mainnet", NewChainIDBySolana(SolanaMainnet), false},
-		{"valid solana devnet", NewChainIDBySolana(SolanaDevnet), false},
-		{"valid bip122", MustNewChainIDByBIP122("000000000019d6689c085ae165831e93"), false},
+		{"valid eip155", NewEIP155ChainID(1), false},
+		{"valid solana mainnet", NewSolanaChainID(SolanaMainnet), false},
+		{"valid solana devnet", NewSolanaChainID(SolanaDevnet), false},
+		{"valid bip122", MustNewBIP122ChainID("000000000019d6689c085ae165831e93"), false},
 		{"zero value", ChainID{}, true},
 		{"invalid eip155 ref", ChainID{Namespace: NamespaceEIP155, Reference: "abc"}, true},
 		{"invalid solana ref short", ChainID{Namespace: NamespaceSolana, Reference: "invalid"}, true},
@@ -182,27 +182,27 @@ func TestChainID_Validate(t *testing.T) {
 
 func TestChainID_String(t *testing.T) {
 	assert.Equal(t, "", ChainID{}.String())
-	assert.Equal(t, "eip155:1", NewChainIDByEIP155(1).String())
-	assert.Equal(t, "bip122:000000000019d6689c085ae165831e93", MustNewChainIDByBIP122("000000000019d6689c085ae165831e93").String())
+	assert.Equal(t, "eip155:1", NewEIP155ChainID(1).String())
+	assert.Equal(t, "bip122:000000000019d6689c085ae165831e93", MustNewBIP122ChainID("000000000019d6689c085ae165831e93").String())
 }
 
 // --- ToAccountID Tests ---
 
 func TestChainID_ToAccountID(t *testing.T) {
-	c := NewChainIDByEIP155(1)
+	c := NewEIP155ChainID(1)
 	acc, err := c.ToAccountID("0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb")
 	require.NoError(t, err)
 	assert.Equal(t, "eip155:1:0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb", acc.String())
 
 	// Test with Solana
-	sc := NewChainIDBySolana(SolanaMainnet)
+	sc := NewSolanaChainID(SolanaMainnet)
 	sacc, err := sc.ToAccountID("7S3P4HxJpyyigGzodYwHtCxZyUQe9JiBMHyRWXArAaKv")
 	require.NoError(t, err)
 	assert.Equal(t, "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:7S3P4HxJpyyigGzodYwHtCxZyUQe9JiBMHyRWXArAaKv", sacc.String())
 }
 
 func TestChainID_MustToAccountID(t *testing.T) {
-	c := NewChainIDByEIP155(1)
+	c := NewEIP155ChainID(1)
 
 	// Valid
 	acc := c.MustToAccountID("0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb")
@@ -461,7 +461,7 @@ func TestChainID_UnmarshalJSONInvalid(t *testing.T) {
 
 func TestChainID_RoundTrip(t *testing.T) {
 	// Test complete round-trip: string -> ChainID -> all formats -> ChainID
-	original := MustNewChainIDFromString("eip155:1")
+	original := MustParseChainID("eip155:1")
 
 	// Text round-trip
 	textData, _ := original.MarshalText()
@@ -489,7 +489,7 @@ func TestChainID_RoundTrip(t *testing.T) {
 }
 
 func TestChainID_RoundTripBIP122(t *testing.T) {
-	original := MustNewChainIDFromString("bip122:000000000019d6689c085ae165831e93")
+	original := MustParseChainID("bip122:000000000019d6689c085ae165831e93")
 
 	// Text round-trip
 	textData, _ := original.MarshalText()
