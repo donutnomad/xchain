@@ -60,8 +60,8 @@ func TestGenericParse(t *testing.T) {
 			if a.Address() != tc.address {
 				t.Errorf("Address: got %q, want %q", a.Address(), tc.address)
 			}
-			if a.CAIP2() != tc.chainID {
-				t.Errorf("CAIP2: got %q, want %q", a.CAIP2(), tc.chainID)
+			if a.ChainID().String() != (tc.chainID) {
+				t.Errorf("ChainID: got %q, want %q", a.ChainID(), tc.chainID)
 			}
 			if a.String() != tc.input {
 				t.Errorf("String: got %q, want %q", a.String(), tc.input)
@@ -321,7 +321,7 @@ func TestAccountIDColumnsCompactSpecializedTypes(t *testing.T) {
 		if !ok {
 			t.Fatalf("expected EIP155AccountID, got %T", recovered)
 		}
-		if eipRecovered.ChainID().Cmp(eip.ChainID()) != 0 {
+		if eipRecovered.EIP155ChainID().Cmp(eip.EIP155ChainID()) != 0 {
 			t.Errorf("ChainID mismatch: got %s, want %s", eipRecovered.ChainID(), eip.ChainID())
 		}
 	})

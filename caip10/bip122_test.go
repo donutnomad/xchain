@@ -79,8 +79,8 @@ func TestBIP122NewBitcoinMainnet(t *testing.T) {
 	if a.Address() != address {
 		t.Errorf("Address: got %q", a.Address())
 	}
-	if a.CAIP2() != "bip122:"+BitcoinMainnet.String() {
-		t.Errorf("CAIP2: got %q", a.CAIP2())
+	if a.ChainID() != ChainIDBitcoinMainnet {
+		t.Errorf("CAIP2: got %q", a.ChainID())
 	}
 }
 

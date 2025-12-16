@@ -52,8 +52,8 @@ func TestEIP155Parse(t *testing.T) {
 			if eip.Account().String() != tc.address {
 				t.Errorf("Address: got %q, want %q", eip.Address(), tc.address)
 			}
-			if eip.ChainID().Int64() != tc.chainID {
-				t.Errorf("ChainID: got %d, want %d", eip.ChainID().Int64(), tc.chainID)
+			if eip.EIP155ChainID().Int64() != tc.chainID {
+				t.Errorf("ChainID: got %d, want %d", eip.EIP155ChainID().Int64(), tc.chainID)
 			}
 		})
 	}
@@ -69,10 +69,10 @@ func TestEIP155NewFromHex(t *testing.T) {
 	if a.Reference() != "1" {
 		t.Errorf("Reference: got %q", a.Reference())
 	}
-	if a.CAIP2() != "eip155:1" {
-		t.Errorf("CAIP2: got %q", a.CAIP2())
+	if a.ChainID() != ChainIDEthereumMainnet {
+		t.Errorf("CAIP2: got %q", a.ChainID())
 	}
-	if a.ChainID().Int64() != 1 {
+	if a.EIP155ChainID().Int64() != 1 {
 		t.Errorf("ChainID: got %s, want 1", a.ChainID())
 	}
 }
@@ -86,7 +86,7 @@ func TestEIP155NewFromAddress(t *testing.T) {
 	if a.Account() != addr {
 		t.Errorf("Account mismatch")
 	}
-	if a.ChainID().Int64() != 1 {
+	if a.EIP155ChainID().Int64() != 1 {
 		t.Errorf("ChainID mismatch")
 	}
 }
@@ -222,7 +222,7 @@ func TestEIP155ParserRegistered(t *testing.T) {
 func TestEIP155ChainIDNil(t *testing.T) {
 	// Test nil receiver returns nil
 	var a *eip155AccountID
-	if a.ChainID() != nil {
+	if a.EIP155ChainID() != nil {
 		t.Error("nil receiver should return nil chain ID")
 	}
 }
@@ -234,7 +234,7 @@ func TestEIP155LargeChainID(t *testing.T) {
 	if a.Reference() != "42161" {
 		t.Errorf("Reference: got %q, want %q", a.Reference(), "42161")
 	}
-	if a.ChainID().Int64() != 42161 {
+	if a.EIP155ChainID().Int64() != 42161 {
 		t.Errorf("ChainID mismatch")
 	}
 }
@@ -249,13 +249,13 @@ func TestEIP155SetChainID(t *testing.T) {
 	}
 
 	// Original should be unchanged
-	if a.ChainID().Int64() != 1 {
+	if a.EIP155ChainID().Int64() != 1 {
 		t.Error("original chain ID should not change")
 	}
 
 	// New should have updated chain ID
-	if b.ChainID().Int64() != 137 {
-		t.Errorf("new chain ID: got %d, want 137", b.ChainID().Int64())
+	if b.EIP155ChainID().Int64() != 137 {
+		t.Errorf("new chain ID: got %d, want 137", b.EIP155ChainID().Int64())
 	}
 
 	// Address should be the same
@@ -291,7 +291,7 @@ func TestEIP155SetAddress(t *testing.T) {
 	}
 
 	// Chain ID should be the same
-	if a.ChainID().Cmp(b.ChainID()) != 0 {
+	if a.EIP155ChainID().Cmp(b.EIP155ChainID()) != 0 {
 		t.Error("chain ID should be the same")
 	}
 
@@ -320,8 +320,8 @@ func TestEIP155GenericTypes(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			a := tc.create()
-			if a.ChainID().Int64() != tc.chainID {
-				t.Errorf("chainID: got %d, want %d", a.ChainID().Int64(), tc.chainID)
+			if a.EIP155ChainID().Int64() != tc.chainID {
+				t.Errorf("chainID: got %d, want %d", a.EIP155ChainID().Int64(), tc.chainID)
 			}
 		})
 	}
@@ -337,7 +337,7 @@ func TestEIP155MaxChainID(t *testing.T) {
 
 	// Test with exactly max value
 	a := NewEIP155(maxChainID, addr)
-	if a.ChainID().Cmp(maxChainID) != 0 {
+	if a.EIP155ChainID().Cmp(maxChainID) != 0 {
 		t.Errorf("chain ID should be max value")
 	}
 	// Reference should be 32 characters of '9'
@@ -351,7 +351,7 @@ func TestEIP155MaxChainID(t *testing.T) {
 
 	b := NewEIP155(overMax, addr)
 	// Should be capped to max
-	if b.ChainID().Cmp(maxChainID) != 0 {
+	if b.EIP155ChainID().Cmp(maxChainID) != 0 {
 		t.Errorf("chain ID should be capped to max value, got %s", b.ChainID().String())
 	}
 
@@ -361,7 +361,7 @@ func TestEIP155MaxChainID(t *testing.T) {
 
 	c := NewEIP155(veryLarge, addr)
 	// Should be capped to max
-	if c.ChainID().Cmp(maxChainID) != 0 {
+	if c.EIP155ChainID().Cmp(maxChainID) != 0 {
 		t.Errorf("chain ID should be capped to max value")
 	}
 }

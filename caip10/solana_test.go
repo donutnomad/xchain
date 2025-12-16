@@ -64,8 +64,8 @@ func TestSolanaNewFromBase58(t *testing.T) {
 	if a.Reference() != SolanaMainnet.String() {
 		t.Errorf("Reference: got %q", a.Reference())
 	}
-	if a.CAIP2() != "solana:"+SolanaMainnet.String() {
-		t.Errorf("CAIP2: got %q", a.CAIP2())
+	if a.ChainID() != ChainIDSolanaMainnet {
+		t.Errorf("ChainID: got %q", a.ChainID())
 	}
 }
 
