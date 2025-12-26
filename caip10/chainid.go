@@ -11,6 +11,12 @@ import (
 
 type Namespace string
 
+// ChainIDEVM Representing all the EVM chains
+var ChainIDEVM = NewEIP155ChainID(0)
+
+// ChainIDSolana Representing all the solana chains
+var ChainIDSolana = NewSolanaChainID("00000000000000000000000000000000")
+
 // Ethereum
 var (
 	ChainIDEthereumMainnet = NewEIP155ChainID(1)
