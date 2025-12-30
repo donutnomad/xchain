@@ -1,8 +1,10 @@
 package caip10
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/donutnomad/eths/ecommon"
 )
@@ -62,8 +64,24 @@ func NewEIP155[C eip155ChainID](chainID C, address ecommon.Address) EIP155Accoun
 
 // NewEIP155FromHex creates a new EIP155AccountID from a chain ID and hex address string.
 func NewEIP155FromHex[C eip155ChainID](chainID C, hexAddress string) EIP155AccountID {
-	addr := ecommon.HexToAddress(hexAddress)
-	return NewEIP155(chainID, addr)
+	id, err := NewEIP155FromHexValidation(chainID, hexAddress)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
+func NewEIP155FromHexValidation[C eip155ChainID](chainID C, hexAddress string) (EIP155AccountID, error) {
+	hexAddress = strings.Trim(strings.ToLower(hexAddress), "0x")
+	decodeString, err := hex.DecodeString(hexAddress)
+	if err != nil {
+		return nil, fmt.Errorf("hex decode %s, failed: %w", hexAddress, err)
+	}
+	if len(decodeString) != ecommon.AddressLength {
+		return nil, fmt.Errorf("hex decode %s, length, failed: %w", hexAddress, ErrInvalidAddress)
+	}
+	addr := ecommon.BytesToAddress(decodeString)
+	return NewEIP155(chainID, addr), nil
 }
 
 // newEIP155FromReference creates EIP155AccountID from string reference (used by parser).
@@ -72,7 +90,7 @@ func newEIP155FromReference(reference, hexAddress string) (EIP155AccountID, erro
 	if !ok {
 		return nil, fmt.Errorf("%w: invalid chain ID %q", ErrInvalidReference, reference)
 	}
-	return NewEIP155FromHex(chainID, hexAddress), nil
+	return NewEIP155FromHexValidation(chainID, hexAddress)
 }
 
 // Account returns the native ecommon.Address.

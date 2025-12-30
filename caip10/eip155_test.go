@@ -23,10 +23,10 @@ func TestEIP155Parse(t *testing.T) {
 			address:   "0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb",
 		},
 		{
-			input:     "eip155:137:0x1234567890123456789012345678901234567890",
+			input:     "eip155:137:0x1234567890AbcdEF1234567890aBcdef12345678",
 			chainID:   137,
 			reference: "137",
-			address:   "0x1234567890123456789012345678901234567890",
+			address:   "0x1234567890AbcdEF1234567890aBcdef12345678",
 		},
 	}
 
@@ -199,7 +199,7 @@ func TestEIP155ZeroValue(t *testing.T) {
 func TestEIP155Equal(t *testing.T) {
 	a1 := NewEIP155FromHex(1, "0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb")
 	a2 := NewEIP155FromHex(1, "0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb")
-	a3 := NewEIP155FromHex(1, "0x1234567890123456789012345678901234567890")
+	a3 := NewEIP155FromHex(1, "0x1234567890AbcdEF1234567890aBcdef12345678")
 
 	if !a1.Equal(a2) {
 		t.Error("identical addresses should be equal")
@@ -272,7 +272,7 @@ func TestEIP155SetChainID(t *testing.T) {
 
 func TestEIP155SetAddress(t *testing.T) {
 	a := NewEIP155FromHex(1, "0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb")
-	newAddr := ecommon.HexToAddress("0x1234567890123456789012345678901234567890")
+	newAddr := ecommon.HexToAddress("0x1234567890AbcdEF1234567890aBcdef12345678")
 
 	// Set new address
 	b := a.SetAddress(newAddr)

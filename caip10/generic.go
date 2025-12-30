@@ -120,11 +120,29 @@ func (a *GenericAccountID) Validate() error {
 	if !NamespaceRegex.MatchString(string(a.namespace)) {
 		return fmt.Errorf("%w: must match [-a-z0-9]{3,8}, got %q", ErrInvalidNamespace, a.namespace)
 	}
-	if !ReferenceRegex.MatchString(a.reference) {
-		return fmt.Errorf("%w: must match [-_a-zA-Z0-9]{1,32}, got %q", ErrInvalidReference, a.reference)
-	}
-	if !AddressRegex.MatchString(a.address) {
-		return fmt.Errorf("%w: must match [-.%%a-zA-Z0-9]{1,128}, got %q", ErrInvalidAddress, a.address)
+	switch a.namespace {
+	case NamespaceEIP155:
+		_, err := newEIP155FromReference(a.reference, a.address)
+		if err != nil {
+			return err
+		}
+	case NamespaceSolana:
+		_, err := NewSolanaFromBase58(SolanaNetwork(a.reference), a.address)
+		if err != nil {
+			return err
+		}
+	case NamespaceBIP122:
+		_, err := NewBIP122WithValidation(BIP122Network(a.reference), a.address)
+		if err != nil {
+			return err
+		}
+	default:
+		if !ReferenceRegex.MatchString(a.reference) {
+			return fmt.Errorf("%w: must match [-_a-zA-Z0-9]{1,32}, got %q", ErrInvalidReference, a.reference)
+		}
+		if !AddressRegex.MatchString(a.address) {
+			return fmt.Errorf("%w: must match [-.%%a-zA-Z0-9]{1,128}, got %q", ErrInvalidAddress, a.address)
+		}
 	}
 	return nil
 }

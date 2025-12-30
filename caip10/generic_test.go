@@ -2,6 +2,7 @@ package caip10
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/fxamacker/cbor/v2"
@@ -455,6 +456,269 @@ func TestEqual(t *testing.T) {
 	}
 	if !Equal(nil, nil) {
 		t.Error("nil == nil should be true")
+	}
+}
+
+func TestGenericAccountID_Validate(t *testing.T) {
+	tests := []struct {
+		name      string
+		accountID *GenericAccountID
+		wantErr   bool
+		errType   error // 期望的错误类型
+	}{
+		// nil 测试
+		{
+			name:      "nil account ID",
+			accountID: nil,
+			wantErr:   true,
+			errType:   ErrEmptyValue,
+		},
+
+		// 无效 namespace 测试
+		{
+			name:      "namespace too short",
+			accountID: newGenericUnchecked("ab", "ref", "addr"),
+			wantErr:   true,
+			errType:   ErrInvalidNamespace,
+		},
+		{
+			name:      "namespace too long",
+			accountID: newGenericUnchecked("abcdefghi", "ref", "addr"),
+			wantErr:   true,
+			errType:   ErrInvalidNamespace,
+		},
+		{
+			name:      "namespace with uppercase",
+			accountID: newGenericUnchecked("EIP155", "1", "0xabc"),
+			wantErr:   true,
+			errType:   ErrInvalidNamespace,
+		},
+		{
+			name:      "namespace with special chars",
+			accountID: newGenericUnchecked("abc@def", "ref", "addr"),
+			wantErr:   true,
+			errType:   ErrInvalidNamespace,
+		},
+		{
+			name:      "empty namespace",
+			accountID: newGenericUnchecked("", "ref", "addr"),
+			wantErr:   true,
+			errType:   ErrInvalidNamespace,
+		},
+
+		// EIP155 namespace 测试
+		{
+			name:      "eip155 valid",
+			accountID: newGenericUnchecked(NamespaceEIP155, "1", "0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb"),
+			wantErr:   false,
+		},
+		{
+			name:      "eip155 invalid chain id",
+			accountID: newGenericUnchecked(NamespaceEIP155, "abc", "0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb"),
+			wantErr:   true,
+			errType:   ErrInvalidReference,
+		},
+		{
+			name:      "eip155 invalid address",
+			accountID: newGenericUnchecked(NamespaceEIP155, "1", "invalid"),
+			wantErr:   true,
+		},
+		{
+			name:      "eip155 large chain id",
+			accountID: newGenericUnchecked(NamespaceEIP155, "56", "0xab16a96D359eC26a11e2C2b3d8f8B8942d5Bfcdb"),
+			wantErr:   false,
+		},
+
+		// Solana namespace 测试
+		{
+			name:      "solana valid mainnet",
+			accountID: newGenericUnchecked(NamespaceSolana, string(SolanaMainnet), "7S3P4HxJpyyigGzodYwHtCxZyUQe9JiBMHyRWXArAaKv"),
+			wantErr:   false,
+		},
+		{
+			name:      "solana valid devnet",
+			accountID: newGenericUnchecked(NamespaceSolana, string(SolanaDevnet), "7S3P4HxJpyyigGzodYwHtCxZyUQe9JiBMHyRWXArAaKv"),
+			wantErr:   false,
+		},
+		{
+			name:      "solana invalid address",
+			accountID: newGenericUnchecked(NamespaceSolana, string(SolanaMainnet), "invalid"),
+			wantErr:   true,
+			errType:   ErrInvalidAddress,
+		},
+		{
+			name:      "solana address too short",
+			accountID: newGenericUnchecked(NamespaceSolana, string(SolanaMainnet), "abc"),
+			wantErr:   true,
+			errType:   ErrInvalidAddress,
+		},
+
+		// BIP122 namespace 测试
+		{
+			name:      "bip122 valid bitcoin mainnet",
+			accountID: newGenericUnchecked(NamespaceBIP122, string(BitcoinMainnet), "bc1qwz2lhc40s8ty3l5jg3plpve3y3l82x9l42q7fk"),
+			wantErr:   false,
+		},
+		{
+			name:      "bip122 valid bitcoin testnet",
+			accountID: newGenericUnchecked(NamespaceBIP122, string(BitcoinTestnet), "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"),
+			wantErr:   false,
+		},
+		{
+			name:      "bip122 invalid address",
+			accountID: newGenericUnchecked(NamespaceBIP122, string(BitcoinMainnet), "invalid!address"),
+			wantErr:   true,
+			errType:   ErrInvalidAddress,
+		},
+		{
+			name:      "bip122 empty address",
+			accountID: newGenericUnchecked(NamespaceBIP122, string(BitcoinMainnet), ""),
+			wantErr:   true,
+			errType:   ErrInvalidAddress,
+		},
+
+		// 通用 namespace (default case) 测试
+		{
+			name:      "generic valid cosmos",
+			accountID: newGenericUnchecked("cosmos", "cosmoshub-3", "cosmos1t2uflqwqe0fsj0shcfkrvpukewcw40yjj6hdc0"),
+			wantErr:   false,
+		},
+		{
+			name:      "generic valid polkadot",
+			accountID: newGenericUnchecked("polkadot", "b0a8d493285c2df73290dfb7e61f870f", "5hmuyxw9xdgbpptgypokw4thfyoe3ryenebr381z9iaegmfy"),
+			wantErr:   false,
+		},
+		{
+			name:      "generic valid hedera",
+			accountID: newGenericUnchecked("hedera", "mainnet", "0.0.1234567890-zbhlt"),
+			wantErr:   false,
+		},
+		{
+			name:      "generic invalid reference with special char",
+			accountID: newGenericUnchecked("cosmos", "hub@invalid", "addr"),
+			wantErr:   true,
+			errType:   ErrInvalidReference,
+		},
+		{
+			name:      "generic reference too long (33 chars)",
+			accountID: newGenericUnchecked("cosmos", "123456789012345678901234567890123", "addr"),
+			wantErr:   true,
+			errType:   ErrInvalidReference,
+		},
+		{
+			name:      "generic empty reference",
+			accountID: newGenericUnchecked("cosmos", "", "addr"),
+			wantErr:   true,
+			errType:   ErrInvalidReference,
+		},
+		{
+			name:      "generic invalid address with slash",
+			accountID: newGenericUnchecked("cosmos", "hub", "addr/path"),
+			wantErr:   true,
+			errType:   ErrInvalidAddress,
+		},
+		{
+			name:      "generic invalid address with backslash",
+			accountID: newGenericUnchecked("cosmos", "hub", "addr\\back"),
+			wantErr:   true,
+			errType:   ErrInvalidAddress,
+		},
+		{
+			name:      "generic address too long (129 chars)",
+			accountID: newGenericUnchecked("cosmos", "hub", "a"+string(make([]byte, 128))),
+			wantErr:   true,
+			errType:   ErrInvalidAddress,
+		},
+		{
+			name:      "generic empty address",
+			accountID: newGenericUnchecked("cosmos", "hub", ""),
+			wantErr:   true,
+			errType:   ErrInvalidAddress,
+		},
+
+		// 边界值测试
+		{
+			name:      "namespace min length (3 chars)",
+			accountID: newGenericUnchecked("abc", "ref", "addr"),
+			wantErr:   false,
+		},
+		{
+			name:      "namespace max length (8 chars)",
+			accountID: newGenericUnchecked("abcdefgh", "ref", "addr"),
+			wantErr:   false,
+		},
+		{
+			name:      "reference min length (1 char)",
+			accountID: newGenericUnchecked("cosmos", "a", "addr"),
+			wantErr:   false,
+		},
+		{
+			name:      "reference max length (32 chars)",
+			accountID: newGenericUnchecked("cosmos", "12345678901234567890123456789012", "addr"),
+			wantErr:   false,
+		},
+		{
+			name:      "address min length (1 char)",
+			accountID: newGenericUnchecked("cosmos", "hub", "a"),
+			wantErr:   false,
+		},
+		{
+			name:      "address max length (128 chars)",
+			accountID: newGenericUnchecked("cosmos", "hub", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+			wantErr:   false,
+		},
+		{
+			name:      "namespace with hyphen",
+			accountID: newGenericUnchecked("abc-def", "ref", "addr"),
+			wantErr:   false,
+		},
+		{
+			name:      "namespace with number",
+			accountID: newGenericUnchecked("abc123", "ref", "addr"),
+			wantErr:   false,
+		},
+		{
+			name:      "reference with underscore",
+			accountID: newGenericUnchecked("cosmos", "hub_test", "addr"),
+			wantErr:   false,
+		},
+		{
+			name:      "reference with hyphen",
+			accountID: newGenericUnchecked("cosmos", "hub-test", "addr"),
+			wantErr:   false,
+		},
+		{
+			name:      "address with dot",
+			accountID: newGenericUnchecked("hedera", "mainnet", "0.0.12345"),
+			wantErr:   false,
+		},
+		{
+			name:      "address with hyphen",
+			accountID: newGenericUnchecked("hedera", "mainnet", "0.0.1234567890-zbhlt"),
+			wantErr:   false,
+		},
+		{
+			name:      "address with percent",
+			accountID: newGenericUnchecked("cosmos", "hub", "addr%20test"),
+			wantErr:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.accountID.Validate()
+			if tc.wantErr {
+				if err == nil {
+					t.Errorf("Validate() expected error, got nil")
+				} else if tc.errType != nil && !errors.Is(err, tc.errType) {
+					t.Errorf("Validate() error = %v, want error type %v", err, tc.errType)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Validate() unexpected error: %v", err)
+				}
+			}
+		})
 	}
 }
 
