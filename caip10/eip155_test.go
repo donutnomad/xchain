@@ -209,6 +209,13 @@ func TestEIP155Equal(t *testing.T) {
 	}
 }
 
+func TestEIP155Zero(t *testing.T) {
+	a1 := NewEIP155FromHex(1, "0x0000000000000000000000000000000000000000")
+	if a1.String() != "eip155:1:0x0000000000000000000000000000000000000000" {
+		t.Fatalf("invalid")
+	}
+}
+
 func TestEIP155ParserRegistered(t *testing.T) {
 	p, ok := GetParser(NamespaceEIP155)
 	if !ok {

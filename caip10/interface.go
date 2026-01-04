@@ -86,7 +86,7 @@ func Parse(s string) (AccountID, error) {
 		return p.ParseAddress(ref, addr)
 	}
 
-	return NewGeneric(Namespace(ns), ref, addr)
+	return NewGeneric(ns, ref, addr)
 }
 
 // MustParse parses a CAIP-10 string and panics if invalid.
@@ -104,6 +104,11 @@ func ParseWithNamespace(namespace Namespace, reference, address string) (Account
 		return p.ParseAddress(reference, address)
 	}
 	return NewGeneric(namespace, reference, address)
+}
+
+// ParseWithChainID parses using a specific chainId parser.
+func ParseWithChainID(chainID string, address string) (AccountID, error) {
+	return Parse(chainID + ":" + address)
 }
 
 // Equal compares two AccountIDs for equality.

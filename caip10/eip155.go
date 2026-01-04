@@ -72,7 +72,7 @@ func NewEIP155FromHex[C eip155ChainID](chainID C, hexAddress string) EIP155Accou
 }
 
 func NewEIP155FromHexValidation[C eip155ChainID](chainID C, hexAddress string) (EIP155AccountID, error) {
-	hexAddress = strings.Trim(strings.ToLower(hexAddress), "0x")
+	hexAddress = strings.TrimPrefix(strings.ToLower(hexAddress), "0x")
 	decodeString, err := hex.DecodeString(hexAddress)
 	if err != nil {
 		return nil, fmt.Errorf("hex decode %s, failed: %w", hexAddress, err)
